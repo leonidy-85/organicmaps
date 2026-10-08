@@ -46,7 +46,7 @@
 #include <utility>
 #include <vector>
 
-#include <sailfishapp.h>
+#include "sailfish/app_lib.hpp"
 
 namespace sailfish
 {
@@ -871,7 +871,7 @@ void Routing::UpdateNavigation(double speedMps)
   }
   // The core takes the speed cameras setting into account.
   if (manager.GetSpeedCamManager().ShouldPlayBeepSignal())
-    m_beep.Play(SailfishApp::pathTo(QStringLiteral("sounds/speed_cams_beep.wav")).toLocalFile());
+    m_beep.Play(AppLib::pathTo(QStringLiteral("sounds/speed_cams_beep.wav")).toLocalFile());
   if (manager.IsRouteFinished())
   {
     // Without stopping the voice, so that the arrival is heard.

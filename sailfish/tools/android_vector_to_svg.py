@@ -295,7 +295,9 @@ def to_svg(root, white):
         if rgb is None or alpha is not None:
             raise ValueError("Unsupported tint: " + tint)
         recolor(svg, rgb)
-    ET.indent(svg)
+    # xml.etree.ElementTree.indent() was added in Python 3.9; the Aurora SDK ships 3.8.
+    if hasattr(ET, "indent"):
+        ET.indent(svg)
     return ET.ElementTree(svg)
 
 

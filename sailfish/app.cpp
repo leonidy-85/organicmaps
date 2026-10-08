@@ -40,7 +40,7 @@
 #include <memory>
 #include <thread>
 
-#include <sailfishapp.h>
+#include "sailfish/app_lib.hpp"
 
 namespace
 {
@@ -71,8 +71,8 @@ QString MoveMaps()
   if (!sailfish::MapsStorage::HasPendingMove())
     return sailfish::MapsStorage::ApplyPendingMove([](double) {});
 
-  std::unique_ptr<QQuickView> view(SailfishApp::createView());
-  view->setSource(SailfishApp::pathTo(QStringLiteral("qml/MovingMaps.qml")));
+  std::unique_ptr<QQuickView> view(AppLib::createView());
+  view->setSource(AppLib::pathTo(QStringLiteral("qml/MovingMaps.qml")));
   view->show();
   std::atomic<double> progress{0};
   QString dir;
@@ -93,7 +93,7 @@ QString MoveMaps()
 void SetupPlatform()
 {
   // Platform reads these on first use; the defaults match the installed RPM layout and Sailjail.
-  SetEnvIfUnset("MWM_RESOURCES_DIR", SailfishApp::pathTo(QStringLiteral("data")).toLocalFile());
+  SetEnvIfUnset("MWM_RESOURCES_DIR", AppLib::pathTo(QStringLiteral("data")).toLocalFile());
   QString writableDir = MoveMaps();
   if (writableDir.isEmpty())
     writableDir = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
@@ -135,7 +135,7 @@ __attribute__((visibility("default"))) int OrganicMapsMain(int argc, char * argv
 {
   SetDefaultSurfaceFormat();
 
-  std::unique_ptr<QGuiApplication> app(SailfishApp::application(argc, argv));
+  std::unique_ptr<QGuiApplication> app(AppLib::application(argc, argv));
   // After the application, which sets the system locale: strtod() in platform/measurement_utils.cpp and
   // search/latlon_match.cpp needs dots as decimal separators.
   std::setlocale(LC_NUMERIC, "C");
@@ -173,7 +173,7 @@ __attribute__((visibility("default"))) int OrganicMapsMain(int argc, char * argv
   QObject::connect(&urlHandler, &sailfish::UrlHandler::oauth2CodeReceived, &osmAccount,
                    &sailfish::OsmAccount::LoginWithCode);
   dbusInbox.SetHandler(urlHandler);
-  std::unique_ptr<QQuickView> view(SailfishApp::createView());
+  std::unique_ptr<QQuickView> view(AppLib::createView());
   view->rootContext()->setContextProperty(QStringLiteral("appInfo"), &appInfo);
   view->rootContext()->setContextProperty(QStringLiteral("appSettings"), &appSettings);
   view->rootContext()->setContextProperty(QStringLiteral("osmAccount"), &osmAccount);
@@ -181,8 +181,9 @@ __attribute__((visibility("default"))) int OrganicMapsMain(int argc, char * argv
   view->rootContext()->setContextProperty(QStringLiteral("urlHandler"), &urlHandler);
   view->rootContext()->setContextProperty(QStringLiteral("mapsStorage"), &mapsStorage);
   view->rootContext()->setContextProperty(QStringLiteral("downloads"), &downloads);
-  // A local file loads synchronously.
-  view->setSource(SailfishApp::pathToMainQml());
+  // Aurora's pathToMainQml() looks for "qml/<package id>.qml", while the entry point is installed
+  // as "qml/<application name>.qml" (see SAILFISH_APP_NAME), so spell the path out.
+  view->setSource(AppLib::pathTo(QStringLiteral("qml/" SAILFISH_APP_NAME ".qml")));
   if (view->status() != QQuickView::Ready)
   {
     for (auto const & error : view->errors())
