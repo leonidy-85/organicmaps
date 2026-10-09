@@ -37,6 +37,15 @@ pkg_check_modules(MLITE REQUIRED mlite5)
 # Prompts play over PulseAudio, see PromptPlayer.
 pkg_check_modules(PULSE REQUIRED libpulse-simple)
 
+# Aurora OS ships no speech engine and the app sandbox forbids running external programs, so turn
+# notifications are synthesized in-process with Piper. The libraries come from the Aurora Conan
+# packages (piper, piper-phonemize, onnxruntime, espeak-ng, spdlog, fmt) unpacked into VOICE_LIBS_DIR
+# (with include/ and lib/). Voice models and the espeak-ng data are shipped by a separate package.
+set(VOICE_LIBS_DIR "" CACHE PATH "Aurora Conan voice libraries directory (include/ + lib/)")
+if (AURORA AND NOT VOICE_LIBS_DIR)
+  message(FATAL_ERROR "AURORA=ON requires -DVOICE_LIBS_DIR=<dir with include/ and lib/ from the Conan piper packages>")
+endif()
+
 set(SRC
   app.cpp
   app_info.cpp
@@ -101,6 +110,11 @@ target_compile_definitions(${PROJECT_NAME}_lib PRIVATE "SAILFISH_APP_NAME=\"${AP
 target_link_options(${PROJECT_NAME}_lib PRIVATE -Wl,--exclude-libs,ALL)
 target_include_directories(${PROJECT_NAME}_lib PRIVATE ${APPLIB_INCLUDE_DIRS} ${MLITE_INCLUDE_DIRS}
                            ${PULSE_INCLUDE_DIRS})
+if (AURORA)
+  # onnxruntime headers are included without a subdirectory prefix by piper.hpp.
+  target_include_directories(${PROJECT_NAME}_lib PRIVATE
+    "${VOICE_LIBS_DIR}/include" "${VOICE_LIBS_DIR}/include/onnxruntime")
+endif()
 target_link_libraries(${PROJECT_NAME}_lib
   PRIVATE
     Boost::headers
@@ -116,6 +130,11 @@ target_link_libraries(${PROJECT_NAME}_lib
     ${MLITE_LIBRARIES}
     ${PULSE_LIBRARIES}
 )
+if (AURORA)
+  # Piper and its transitive dependencies from the Aurora Conan packages.
+  target_link_directories(${PROJECT_NAME}_lib PRIVATE "${VOICE_LIBS_DIR}/lib")
+  target_link_libraries(${PROJECT_NAME}_lib PRIVATE piper piper_phonemize onnxruntime espeak-ng spdlog fmt)
+endif()
 
 add_executable(${PROJECT_NAME} main.cpp)
 set_target_properties(${PROJECT_NAME} PROPERTIES
@@ -144,6 +163,10 @@ install(FILES "${OMIM_ROOT}/data/strings/types_strings.txt" "${OMIM_ROOT}/data/s
 
 install(TARGETS ${PROJECT_NAME} DESTINATION bin)
 install(TARGETS ${PROJECT_NAME}_lib LIBRARY DESTINATION ${APP_DATA_DIR}/lib)
+if (AURORA)
+  # Piper and its dependencies, resolved from the private lib directory through the RPATH.
+  install(DIRECTORY "${VOICE_LIBS_DIR}/lib/" DESTINATION ${APP_DATA_DIR}/lib)
+endif()
 install(DIRECTORY sounds DESTINATION ${APP_DATA_DIR})
 install(DIRECTORY qml DESTINATION ${APP_DATA_DIR} PATTERN organicmaps.qml EXCLUDE)
 install(FILES qml/organicmaps.qml DESTINATION ${APP_DATA_DIR}/qml RENAME ${APP_QML_NAME}.qml)
