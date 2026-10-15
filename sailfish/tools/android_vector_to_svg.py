@@ -225,7 +225,9 @@ def convert(node, out, clip_ids, defs):
             for attr in child:
                 if attr.tag != AAPT_ATTR or attr.get("name") not in ("android:fillColor", "android:strokeColor"):
                     raise ValueError("Unsupported path child: " + attr.tag)
-                gradients[attr.get("name").removeprefix("android:")] = gradient(attr, defs)
+                # str.removeprefix() was added in Python 3.9; the Aurora SDK ships 3.8.
+                name = attr.get("name")
+                gradients[name[len("android:"):] if name.startswith("android:") else name] = gradient(attr, defs)
             for kind in ("fill", "stroke"):
                 value = child.get(A + kind + "Color")
                 if kind + "Color" in gradients:
