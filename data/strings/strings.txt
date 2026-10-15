@@ -44279,6 +44279,12 @@ ru = Карты будут перемещены при следующем зап
 sv = Kartorna flyttas nästa gång Organic Maps startar. Det kan ta flera minuter.
 uk = Мапи буде переміщено під час наступного запуску Organic Maps. Це може тривати кілька хвилин.
 
+[maps_storage_folder]
+comment = Sailfish OS: button in the Maps Storage settings to choose an arbitrary folder for maps
+tags = sailfish
+en = Choose a folder…
+ru = Выбрать папку…
+
 [pref_tts_voice_title]
 comment = Sailfish OS: chooses one of the Speech Note voices of the voice instructions language
 tags = sailfish

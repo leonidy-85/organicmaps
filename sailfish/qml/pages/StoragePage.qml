@@ -1,5 +1,6 @@
 import QtQuick 2.6
 import Sailfish.Silica 1.0
+import Sailfish.Pickers 1.0
 import "notices.js" as Toast
 
 Page {
@@ -67,6 +68,19 @@ Page {
             }
         }
 
+        footer: Column {
+            width: listView.width
+            // A gap between the storage locations above and the folder choice below them.
+            topPadding: Theme.paddingLarge
+            bottomPadding: Theme.paddingLarge
+
+            Button {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: appInfo.localized("maps_storage_folder")
+                onClicked: pageStack.push(folderPicker)
+            }
+        }
+
         VerticalScrollDecorator {}
     }
 
@@ -88,6 +102,18 @@ Page {
             anchors.horizontalCenter: parent.horizontalCenter
             text: appInfo.localized("close")
             onClicked: Qt.quit()
+        }
+    }
+
+    Component {
+        id: folderPicker
+
+        FolderPickerPage {
+            dialogTitle: appInfo.localized("maps_storage_folder")
+            onSelectedPathChanged: {
+                if (!mapsStorage.moveTo(selectedPath))
+                    Toast.showLong(appInfo.localized("move_maps_error"))
+            }
         }
     }
 }

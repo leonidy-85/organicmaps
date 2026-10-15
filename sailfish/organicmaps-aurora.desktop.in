@@ -17,5 +17,6 @@ OrganizationName=@APP_ORG@
 ApplicationName=@APP_QML_NAME@
 ExecDBus=/usr/bin/@APP_NAME@
 # Audio: voice instructions and the speed camera beep. Internet: map downloads and the OSM login.
-# Location: positioning. UserDirs/RemovableMedia: imported files, backups and maps on a memory card.
-Permissions=Audio;Internet;Location;UserDirs;RemovableMedia
+# Location: positioning. Documents/UserDirs/RemovableMedia: imported files, backups, a custom maps
+# folder and maps on a memory card.
+Permissions=Audio;Internet;Location;Documents;UserDirs;RemovableMedia

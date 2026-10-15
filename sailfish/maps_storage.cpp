@@ -205,6 +205,18 @@ QVariantList MapsStorage::locations() const
                                                  : Localized("maps_storage_removable") + " (" + volume.name() + ")";
     add(volume.rootPath() + QStringLiteral("/organicmaps"), name, volume);
   }
+
+  // The custom folder chosen by the user, when it is neither the default one nor a mounted volume.
+  QString const custom = QDir::cleanPath(current);
+  if (custom != QDir::cleanPath(DefaultDir()) && !custom.startsWith(QStringLiteral("/run/media/")))
+  {
+    bool present = false;
+    for (auto const & location : result)
+      if (location.toMap().value("path").toString() == custom)
+        present = true;
+    if (!present)
+      add(custom, Localized("maps_storage_external"), QStorageInfo(custom));
+  }
   return result;
 }
 
