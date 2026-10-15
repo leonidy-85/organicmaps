@@ -31,6 +31,9 @@ public:
   // Does the pending move, reporting the copied part (0 to 1), then returns the folder to use; empty for the default
   // one. Before the platform starts.
   static QString ApplyPendingMove(std::function<void(double)> const & onProgress);
+  // Moves map files lying directly in the storage folder into its per-version subfolder, where the core looks for
+  // them. Call after the platform knows the writable folder and before the core registers the maps.
+  static void AdoptRootMaps(QString const & dir);
 
   QVariantList locations() const;
   QString currentName() const;

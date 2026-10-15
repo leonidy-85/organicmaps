@@ -8,6 +8,7 @@
 #include "storage/storage.hpp"
 
 #include "platform/platform.hpp"
+#include "platform/mwm_version.hpp"
 
 #include "coding/internal/file_data.hpp"
 
@@ -180,6 +181,36 @@ QString MapsStorage::ApplyPendingMove(std::function<void(double)> const & onProg
   SetCleanup(settings, {}, {});
   s_moveFailed = false;
   return newDir;
+}
+
+// static
+void MapsStorage::AdoptRootMaps(QString const & dir)
+{
+  if (dir.isEmpty())
+    return;
+
+  QDir const root(dir);
+  for (QString const & name : root.entryList({"*.mwm"}, QDir::Files))
+  {
+    QString const file = root.filePath(name);
+    try
+    {
+      uint32_t const version = version::ReadVersionDate(GetPlatform().GetReader(file.toStdString(), "f"));
+      if (version == 0)
+        continue;
+      QString const sub = root.filePath(QString::number(version));
+      QString const target = QDir(sub).filePath(name);
+      // Never overwrite: the version folder can hold a newer copy already.
+      if (QFileInfo::exists(target) || !QDir().mkpath(sub))
+        continue;
+      if (base::RenameFileX(file.toStdString(), target.toStdString()))
+        LOG(LINFO, ("Adopted the map", file.toStdString(), "into", sub.toStdString()));
+    }
+    catch (RootException const & e)
+    {
+      LOG(LWARNING, ("Can't adopt the map", file.toStdString(), e.Msg()));
+    }
+  }
 }
 
 QVariantList MapsStorage::locations() const

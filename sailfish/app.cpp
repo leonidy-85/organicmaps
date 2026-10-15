@@ -100,6 +100,9 @@ void SetupPlatform()
   QDir().mkpath(writableDir);
   SetEnvIfUnset("MWM_WRITABLE_DIR", writableDir);
 
+  // Maps copied into the storage folder itself (not into its per-version subfolder) become visible here.
+  sailfish::MapsStorage::AdoptRootMaps(writableDir);
+
   sailfish::AppSettings::InitLogging();
   LOG(LINFO, ("Resources:", GetPlatform().ResourcesDir(), "Writable:", GetPlatform().WritableDir(),
               "Settings:", GetPlatform().SettingsDir()));
